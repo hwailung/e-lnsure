@@ -1,0 +1,995 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>易安網 e-Insure | 業務制度戰略模擬系統 V32</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-dark: #0f172a;       
+            --bg-panel: #1e293b;      
+            --border-color: #334155;
+            --text-main: #f8fafc;
+            --text-sub: #94a3b8;
+            --color-personal: #38bdf8; 
+            --color-team: #fb923c;     
+            --color-accent: #6366f1;   
+            --color-ai: #d946ef;       
+            --color-success: #10b981;  
+            --color-warning: #f59e0b;  
+            --color-danger: #ef4444;   
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: 'Inter', "Microsoft JhengHei", sans-serif;
+            min-height: 100vh;
+            display: flex;
+            overflow-x: hidden;
+            margin: 0;
+        }
+
+        /* --- Sidebar --- */
+        .sidebar {
+            width: 360px;
+            background-color: #020617;
+            border-right: 1px solid var(--border-color);
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 100;
+            box-shadow: 4px 0 20px rgba(0,0,0,0.5);
+        }
+        
+        .sidebar::-webkit-scrollbar { width: 6px; }
+        .sidebar::-webkit-scrollbar-track { background: #0f172a; }
+        .sidebar::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+
+        /* --- Main Content --- */
+        .main-content {
+            margin-left: 360px;
+            flex-grow: 1;
+            padding: 30px 40px;
+            background-image: radial-gradient(circle at top right, #1e293b 0%, transparent 40%);
+        }
+
+        /* --- Tabs Styling --- */
+        .nav-tabs { border-bottom: 1px solid var(--border-color); margin-bottom: 25px; }
+        .nav-tabs .nav-link {
+            color: var(--text-sub);
+            background: transparent;
+            border: none;
+            border-bottom: 3px solid transparent;
+            font-size: 1rem;
+            font-weight: 600;
+            padding: 10px 20px;
+            transition: all 0.3s;
+        }
+        .nav-tabs .nav-link:hover { color: white; }
+        .nav-tabs .nav-link.active {
+            color: var(--color-personal);
+            background: transparent;
+            border-bottom: 3px solid var(--color-personal);
+        }
+        .tab-content { animation: fadeIn 0.5s ease-out; }
+
+        /* --- UI Elements --- */
+        .section-header {
+            font-size: 0.8rem; font-weight: 800; color: var(--color-accent);
+            text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 12px;
+            display: flex; align-items: center; gap: 8px;
+        }
+
+        .custom-select {
+            background-color: #1e293b; border: 1px solid #475569; color: white;
+            border-radius: 8px; padding: 12px; width: 100%; font-size: 0.95rem;
+            cursor: pointer; transition: all 0.3s;
+        }
+        .custom-select:focus { border-color: var(--color-personal); outline: none; }
+        
+        .range-block { margin-bottom: 20px; }
+        .range-label { display: flex; justify-content: space-between; font-size: 0.85rem; color: var(--text-sub); margin-bottom: 8px; }
+        .range-val { font-family: 'JetBrains Mono', monospace; font-weight: bold; color: var(--color-personal); font-size: 1rem; }
+        
+        input[type=range] {
+            width: 100%; height: 6px; background: #334155; border-radius: 5px;
+            outline: none; -webkit-appearance: none; cursor: pointer;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none; width: 18px; height: 18px;
+            background: var(--color-personal); border-radius: 50%;
+            border: 2px solid #fff; box-shadow: 0 0 10px var(--color-personal);
+        }
+
+        .def-box {
+            background: rgba(99, 102, 241, 0.1);
+            border-left: 3px solid var(--color-accent);
+            padding: 12px; margin-bottom: 15px; border-radius: 0 8px 8px 0;
+            font-size: 0.8rem; color: #cbd5e1; line-height: 1.5;
+        }
+        .def-tag { background: var(--color-accent); color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; margin-right: 5px; }
+
+        /* --- Right Panel Components --- */
+        .alert-box {
+            background: rgba(245, 158, 11, 0.1); 
+            border: 1px solid var(--color-warning);
+            border-radius: 12px; padding: 20px; margin-bottom: 25px; 
+            display: none; 
+            animation: fadeIn 0.5s ease-out;
+            box-shadow: 0 0 20px rgba(245, 158, 11, 0.1);
+        }
+        .alert-title { color: var(--color-warning); font-weight: 800; font-size: 1.1rem; margin-bottom: 8px; display: flex; align-items: center; gap: 10px; }
+        .alert-desc { color: #e2e8f0; font-size: 0.95rem; line-height: 1.6; }
+
+        .ai-card {
+            background: linear-gradient(135deg, rgba(217, 70, 239, 0.15), rgba(124, 58, 237, 0.1));
+            border: 1px solid rgba(217, 70, 239, 0.4);
+            border-radius: 16px; padding: 20px; margin-bottom: 30px;
+            display: flex; gap: 20px; align-items: start;
+            box-shadow: 0 0 25px rgba(217, 70, 239, 0.15);
+            transition: all 0.3s;
+        }
+        .ai-icon {
+            width: 48px; height: 48px; background: var(--color-ai); border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.4rem; color: white; flex-shrink: 0;
+            box-shadow: 0 0 15px var(--color-ai);
+        }
+        .ai-content h5 { color: var(--color-ai); font-weight: 800; margin: 0 0 8px 0; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; }
+        .ai-text { color: #f1f5f9; font-size: 1rem; line-height: 1.6; font-weight: 500; }
+
+        /* --- REVENUE MATRIX STYLES --- */
+        .kpi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 25px; margin-bottom: 30px; }
+        
+        .kpi-card { 
+            background: var(--bg-panel); 
+            border: 1px solid var(--border-color); 
+            border-radius: 16px; 
+            padding: 25px; 
+            position: relative; 
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+        }
+        .kpi-card:hover { transform: translateY(-5px); box-shadow: 0 10px 15px rgba(0,0,0,0.2); }
+        .kpi-card.growth { border-top: 4px solid var(--color-personal); }
+        .kpi-card.legacy { border-top: 4px solid var(--color-warning); }
+        .kpi-card.start { border-top: 4px solid var(--text-sub); }
+
+        .kpi-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .kpi-label { font-size: 0.85rem; font-weight: 700; color: var(--text-sub); text-transform: uppercase; letter-spacing: 1px; }
+        .kpi-icon { font-size: 1.2rem; opacity: 0.5; color: white; }
+
+        .kpi-total-box { margin-bottom: 20px; }
+        .kpi-total-val { font-family: 'JetBrains Mono'; font-size: 2.2rem; font-weight: 800; color: white; line-height: 1.2; }
+        .kpi-total-sub { font-size: 0.8rem; color: var(--text-sub); margin-top: 2px; }
+
+        .kpi-breakdown { 
+            background: rgba(0,0,0,0.2); 
+            border-radius: 8px; 
+            padding: 12px; 
+            display: flex; 
+            justify-content: space-between;
+            align-items: center;
+        }
+        .kpi-sub-item { display: flex; flex-direction: column; }
+        .kpi-sub-label { font-size: 0.75rem; color: var(--text-sub); margin-bottom: 2px; }
+        .kpi-sub-val { font-family: 'JetBrains Mono'; font-size: 1rem; font-weight: 700; }
+        
+        .val-p { color: var(--color-personal); }
+        .val-t { color: var(--color-team); }
+
+        .kpi-bar { height: 4px; width: 100%; background: #334155; margin-top: 15px; border-radius: 2px; overflow: hidden; display: flex; }
+        .kpi-bar-p { background: var(--color-personal); height: 100%; }
+        .kpi-bar-t { background: var(--color-team); height: 100%; }
+
+        /* --- Leverage Section --- */
+        .leverage-box { background: linear-gradient(145deg, #1e293b, #0f172a); border: 1px solid #475569; border-radius: 16px; padding: 30px; margin-bottom: 30px; }
+        .lev-grid { display: grid; grid-template-columns: 1fr 180px 1fr; gap: 20px; align-items: center; }
+        .lev-col { 
+            text-align: center; background: rgba(255,255,255,0.02); 
+            border-radius: 10px; padding: 20px; height: 100%; 
+            display: flex; flex-direction: column; justify-content: center; 
+        }
+        .lev-value { font-size: 1.8rem; font-weight: 800; color: white; font-family: 'JetBrains Mono'; margin-bottom: 5px; }
+        
+        .bonus-badge {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--color-success);
+            border: 1px solid var(--color-success);
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            display: inline-block;
+            margin-top: 10px;
+            animation: pulse 2s infinite;
+        }
+
+        .lev-circle { 
+            width: 140px; height: 140px; border-radius: 50%; background: #020617; 
+            border: 4px solid var(--color-success); margin: 0 auto; 
+            display: flex; flex-direction: column; align-items: center; justify-content: center; 
+            box-shadow: 0 0 25px rgba(16, 185, 129, 0.3); 
+        }
+        .lev-x { font-size: 2.5rem; font-weight: 900; color: var(--color-success); font-family: 'JetBrains Mono'; line-height: 1; }
+
+        .bottom-section { display: grid; grid-template-columns: 1.8fr 1fr; gap: 20px; }
+        .panel { background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; }
+        
+        .table-custom { width: 100%; font-size: 0.9rem; color: var(--text-sub); border-collapse: collapse; }
+        .table-custom th { padding: 12px; color: white; border-bottom: 1px solid var(--border-color); text-align: right; font-weight: 600; }
+        .table-custom th:first-child { text-align: center; }
+        .table-custom td { padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.05); font-family: 'JetBrains Mono'; text-align: right; }
+        .table-custom td:first-child { text-align: center; color: var(--text-sub); }
+
+        /* --- UPDATED Case Study Styles --- */
+        .rule-card {
+            background: var(--bg-panel);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 25px;
+        }
+        .rule-title { 
+            font-size: 1.2rem; font-weight: 800; color: white; 
+            margin-bottom: 15px; border-left: 5px solid var(--color-personal); 
+            padding-left: 15px; display: flex; align-items: center; gap: 10px;
+        }
+        .rule-table { width: 100%; font-size: 0.95rem; border-collapse: separate; border-spacing: 0; }
+        .rule-table th { 
+            background: #334155; color: white; padding: 15px; 
+            text-align: center; border-bottom: 2px solid var(--border-color); font-weight: bold;
+        }
+        .rule-table td { 
+            padding: 15px; background: rgba(255,255,255,0.02); 
+            text-align: center; color: var(--text-sub); border-bottom: 1px solid var(--border-color); 
+        }
+        .rule-table tr:hover td { background: rgba(56, 189, 248, 0.05); color: white; }
+        
+        /* New Comparison Grid for Case Study */
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .case-box {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .case-box.winner {
+            border: 2px solid var(--color-success);
+            background: linear-gradient(180deg, rgba(16, 185, 129, 0.1) 0%, rgba(16, 185, 129, 0.02) 100%);
+        }
+        
+        .case-box.loser {
+            border: 1px solid var(--text-sub);
+            opacity: 0.8;
+        }
+
+        .case-header { font-size: 1rem; font-weight: 800; margin-bottom: 15px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; }
+        .winner .case-header { color: var(--color-success); }
+        .loser .case-header { color: var(--text-sub); }
+
+        .case-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed rgba(255,255,255,0.1); font-size: 0.9rem; }
+        .case-row span:last-child { font-family: 'JetBrains Mono'; font-weight: bold; color: white; }
+        
+        .case-total { 
+            margin-top: auto; 
+            padding-top: 15px; 
+            display: flex; 
+            justify-content: space-between; 
+            font-size: 1.2rem; 
+            font-weight: 800; 
+            color: white;
+        }
+        .winner .case-total { color: var(--color-success); }
+
+        .diff-badge {
+            grid-column: 1 / -1;
+            background: rgba(245, 158, 11, 0.2);
+            color: var(--color-warning);
+            text-align: center;
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 15px;
+            font-weight: bold;
+            border: 1px solid var(--color-warning);
+        }
+
+        @keyframes fadeIn { from { opacity:0; transform:translateY(-10px); } to { opacity:1; transform:translateY(0); } }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); } 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); } }
+
+        @media (max-width: 1200px) {
+            .kpi-grid { grid-template-columns: 1fr; }
+            .lev-grid { grid-template-columns: 1fr; gap: 30px; }
+            .bottom-section { grid-template-columns: 1fr; }
+            .comparison-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="sidebar">
+    <div class="mb-4">
+        <h4 class="fw-bold m-0 text-white"><i class="fas fa-shield-alt me-2 text-primary"></i>易安網 e-Insure</h4>
+        <small class="text-white opacity-50" style="letter-spacing: 1px;">制度模擬系統 V32 實戰案例版</small>
+    </div>
+
+    <div class="def-box">
+        <div><span class="def-tag">TFYB</span> <strong>參數定義：</strong></div>
+        本系統數值為 <strong>TFYB (FYB x 90%)</strong>。<br>
+        依據手冊規定，各項獎金發放皆以此為計算基礎。
+    </div>
+
+    <div>
+        <div class="section-header"><i class="fas fa-chess-knight"></i> 推輔戰略</div>
+        <select class="custom-select" id="strategySelect" onchange="calculate()">
+            <option value="A" selected>🛡️ 推輔合一 (級差+代數)</option>
+            <option value="B">🤝 推輔分開 (30%級差+代數)</option>
+        </select>
+        <div class="mt-2 small text-sub" style="font-size: 0.75rem;">
+            * 推輔合一可享「級差」與「代數」雙重利益。<br>
+            * 推輔分開領取「代數」加 30% 首年級差 (手冊P.10)。
+        </div>
+    </div>
+
+    <hr class="border-secondary opacity-25">
+
+    <div>
+        <div class="section-header"><i class="fas fa-user-tag"></i> 職級設定</div>
+        
+        <div class="row g-2">
+            <div class="col-6">
+                <label class="small text-sub mb-1">您的職級</label>
+                <select id="myRank" class="custom-select" onchange="calculate()">
+                    <option value="0.92">VP 業務副總 (92%)</option>
+                    <option value="0.90">AVP 業務協理 (90%)</option>
+                    <option value="0.83" selected>SBD 業務總監 (83%)</option>
+                    <option value="0.75">UM 經理 (75%)</option>
+                    <option value="0.70">BAS 業務副理 (70%)</option>
+                    <option value="0.60">AG 業務專員 (60%)</option>
+                </select>
+            </div>
+            <div class="col-6">
+                <label class="small text-sub mb-1">團隊職級</label>
+                <select id="subRank" class="custom-select" onchange="calculate()">
+                    <option value="0.92">VP 業務副總 (92%)</option>
+                    <option value="0.90">AVP 業務協理 (90%)</option>
+                    <option value="0.83">SBD 業務總監 (83%)</option>
+                    <option value="0.75">UM 經理 (75%)</option>
+                    <option value="0.70">BAS 業務副理 (70%)</option>
+                    <option value="0.60" selected>AG 業務專員 (60%)</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <hr class="border-secondary opacity-25">
+
+    <div>
+        <div class="section-header"><i class="fas fa-chart-pie"></i> 商品配置 (長/短年期)</div>
+        <select class="custom-select" id="productMix" onchange="calculate()">
+            <option value="1.0">100% 長年期 (代數4%)</option>
+            <option value="0.8">80% 長 + 20% 短</option>
+            <option value="0.5">50% 長 + 50% 短</option>
+            <option value="0.2">20% 長 + 80% 短</option>
+            <option value="0.0">100% 短年期 (代數2%)</option>
+        </select>
+        <div class="small text-sub" style="font-size: 0.75rem;">
+            * 依手冊 P.9：長年期代數獎金 4%，短年期 2%。
+        </div>
+    </div>
+
+    <hr class="border-secondary opacity-25">
+
+    <div>
+        <div class="section-header"><i class="fas fa-sliders-h"></i> 業績參數 (TFYB)</div>
+        
+        <div class="range-block">
+            <div class="range-label"><span>個人 TFYB</span><span class="range-val" id="valSales">$610,000</span></div>
+            <input type="range" id="sliderSales" min="1" max="500" value="61" step="1" oninput="calculate()">
+        </div>
+
+        <div class="range-block">
+            <div class="range-label"><span>團隊平均 TFYB</span><span class="range-val" id="valTeamSales">$610,000</span></div>
+            <input type="range" id="sliderTeamSales" min="1" max="500" value="61" step="1" oninput="calculate()">
+        </div>
+
+        <div class="range-block">
+            <div class="range-label"><span>團隊人數</span><span class="range-val" id="valRecruits">1 人</span></div>
+            <input type="range" id="sliderRecruits" min="0" max="100" value="1" oninput="calculate()">
+        </div>
+
+        <div class="range-block">
+            <div class="range-label"><span>續保率 (K值)</span><span class="range-val" id="valRetention">90%</span></div>
+            <input type="range" id="sliderRetention" min="50" max="100" value="90" oninput="calculate()">
+        </div>
+    </div>
+</div>
+
+<div class="main-content">
+
+    <ul class="nav nav-tabs" id="myTab" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="sim-tab" data-bs-toggle="tab" data-bs-target="#tab-simulator" type="button" role="tab"><i class="fas fa-calculator me-2"></i>戰略模擬</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="rules-tab" data-bs-toggle="tab" data-bs-target="#tab-rules" type="button" role="tab"><i class="fas fa-book me-2"></i>制度百科與公式</button>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="myTabContent">
+        
+        <div class="tab-pane fade show active" id="tab-simulator" role="tabpanel">
+            
+            <div id="splitAlert" class="alert-box">
+                <div class="alert-title">
+                    <i class="fas fa-exclamation-triangle"></i> 制度警示：啟動「推輔分開」計算 (手冊 P.10)
+                </div>
+                <div class="alert-desc">
+                    偵測到 <strong>平階增員</strong> 或 <strong>低階增高階</strong>。<br>
+                    依規定改採「推輔分離」計算：
+                    <span style="color:white; font-weight:bold; background:rgba(255,255,255,0.1); padding:2px 5px; border-radius:4px;">
+                        30% 級差 (推薦利益) + 100% 代數獎金
+                    </span>
+                </div>
+            </div>
+
+            <div class="ai-card">
+                <div class="ai-icon"><i class="fas fa-robot"></i></div>
+                <div class="ai-content">
+                    <h5>HEBORN AI 戰略顧問</h5>
+                    <div class="ai-text" id="aiAdvice">
+                        正在分析您的組織數據...
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <h4 class="fw-bold text-white m-0">收益預測矩陣 (REVENUE MATRIX)</h4>
+                <span class="text-sub small">含首年度佣金(FYC)、雙重組織利益(級差+代數)及加權續期利益</span>
+            </div>
+
+            <div class="kpi-grid">
+                
+                <div class="kpi-card start">
+                    <div class="kpi-header">
+                        <span class="kpi-label">第 1 年 (Start)</span>
+                        <i class="fas fa-flag kpi-icon"></i>
+                    </div>
+                    <div class="kpi-total-box">
+                        <div class="kpi-total-val" id="y1_total">$0</div>
+                        <div class="kpi-total-sub">年度總合</div>
+                    </div>
+                    <div class="kpi-breakdown">
+                        <div class="kpi-sub-item">
+                            <span class="kpi-sub-label">個人收入</span>
+                            <span class="kpi-sub-val val-p" id="y1_self">$0</span>
+                        </div>
+                        <div class="kpi-sub-item" style="text-align:right;">
+                            <span class="kpi-sub-label">組織利潤</span>
+                            <span class="kpi-sub-val val-t" id="y1_team">$0</span>
+                        </div>
+                    </div>
+                    <div class="kpi-bar">
+                        <div class="kpi-bar-p" id="bar1_p" style="width:100%"></div>
+                        <div class="kpi-bar-t" id="bar1_t" style="width:0%"></div>
+                    </div>
+                </div>
+
+                <div class="kpi-card growth">
+                    <div class="kpi-header">
+                        <span class="kpi-label" style="color:var(--color-personal)">第 5 年 (Growth)</span>
+                        <i class="fas fa-chart-line kpi-icon" style="color:var(--color-personal); opacity:1;"></i>
+                    </div>
+                    <div class="kpi-total-box">
+                        <div class="kpi-total-val" id="y5_total">$0</div>
+                        <div class="kpi-total-sub">累積總合</div>
+                    </div>
+                    <div class="kpi-breakdown">
+                        <div class="kpi-sub-item">
+                            <span class="kpi-sub-label">個人累積</span>
+                            <span class="kpi-sub-val val-p" id="y5_self">$0</span>
+                        </div>
+                        <div class="kpi-sub-item" style="text-align:right;">
+                            <span class="kpi-sub-label">組織累積</span>
+                            <span class="kpi-sub-val val-t" id="y5_team">$0</span>
+                        </div>
+                    </div>
+                    <div class="kpi-bar">
+                        <div class="kpi-bar-p" id="bar5_p" style="width:50%"></div>
+                        <div class="kpi-bar-t" id="bar5_t" style="width:50%"></div>
+                    </div>
+                </div>
+
+                <div class="kpi-card legacy">
+                    <div class="kpi-header">
+                        <span class="kpi-label" style="color:var(--color-warning)">第 10 年 (Legacy)</span>
+                        <i class="fas fa-crown kpi-icon" style="color:var(--color-warning); opacity:1;"></i>
+                    </div>
+                    <div class="kpi-total-box">
+                        <div class="kpi-total-val" id="y10_total">$0</div>
+                        <div class="kpi-total-sub">累積總合</div>
+                    </div>
+                    <div class="kpi-breakdown">
+                        <div class="kpi-sub-item">
+                            <span class="kpi-sub-label">個人累積</span>
+                            <span class="kpi-sub-val val-p" id="y10_self">$0</span>
+                        </div>
+                        <div class="kpi-sub-item" style="text-align:right;">
+                            <span class="kpi-sub-label">組織累積</span>
+                            <span class="kpi-sub-val val-t" id="y10_team">$0</span>
+                        </div>
+                    </div>
+                    <div class="kpi-bar">
+                        <div class="kpi-bar-p" id="bar10_p" style="width:20%"></div>
+                        <div class="kpi-bar-t" id="bar10_t" style="width:80%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <h4 class="fw-bold text-white m-0">制度槓桿分析 (SYSTEM LEVERAGE)</h4>
+                <span class="text-sub small">比較「推輔合一 (雙重獲利)」與「推輔分開」之效益</span>
+            </div>
+
+            <div class="leverage-box">
+                <div class="lev-grid">
+                    <div class="lev-col">
+                        <div class="lev-title" style="color:#94a3b8; font-size:0.9rem; margin-bottom:10px;">🛡️ 推輔合一 (Strategy A)</div>
+                        <div class="lev-value" id="lev_val_A">$0</div>
+                        <div class="bonus-badge">✨ 級差+代數 雙重啟動</div>
+                        <div class="small text-success" style="font-size:0.8rem; margin-top:5px;">
+                            <i class="fas fa-check me-1"></i>100% 輔導級差<br>
+                            <i class="fas fa-check me-1"></i>100% 代數獎金
+                        </div>
+                    </div>
+                    <div class="lev-circle">
+                        <div class="lev-x" id="lev_multiplier">0.0x</div>
+                        <div class="small text-white mt-2" style="opacity:0.8">槓桿倍數</div>
+                    </div>
+                    <div class="lev-col">
+                        <div class="lev-title" style="color:#94a3b8; font-size:0.9rem; margin-bottom:10px;">🤝 推輔分開 (Strategy B)</div>
+                        <div class="lev-value" id="lev_val_B">$0</div>
+                        <div class="small text-sub" style="font-size:0.8rem; margin-top:20px;">
+                            <i class="fas fa-info-circle me-1"></i>30% 推薦利益 (級差)<br>
+                            <i class="fas fa-check me-1"></i>100% 代數獎金
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bottom-section">
+                <div class="panel">
+                    <div style="height: 380px; width: 100%;">
+                        <canvas id="mainChart"></canvas>
+                    </div>
+                </div>
+                <div class="panel" style="overflow-y:auto; max-height:420px;">
+                    <table class="table-custom">
+                        <thead>
+                            <tr>
+                                <th>年 (Year)</th>
+                                <th>個人收入</th>
+                                <th>團隊利潤</th>
+                                <th>年度總和</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="tab-rules" role="tabpanel">
+            
+            <div class="rule-card">
+                <div class="rule-title"><i class="fas fa-book-open"></i> 名詞定義 (Definitions)</div>
+                <ul style="color:var(--text-sub); line-height:1.8;">
+                    <li><strong>FYP (First Year Premium)：</strong>首年度保費。</li>
+                    <li><strong>TFYB (Total First Year Bonus)：</strong>FYB x 90% (所有獎金發放基礎)。</li>
+                    <li><strong>推輔合一 (Combined)：</strong>上線職級高於下線，且為直轄輔導關係。享有級差+代數。</li>
+                    <li><strong>推輔分開 (Separated)：</strong>同階、低增高或跨區推薦。僅享30%級差+代數。</li>
+                </ul>
+            </div>
+
+            <div class="rule-card">
+                <div class="rule-title"><i class="fas fa-layer-group"></i> 職級與佣金係數表 (Commission Rates)</div>
+                <table class="rule-table">
+                    <thead>
+                        <tr>
+                            <th>職級 (Rank)</th>
+                            <th>簡稱</th>
+                            <th>佣金係數 (TFYB%)</th>
+                            <th>備註</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>業務副總</td><td>VP</td><td style="color:var(--color-success);">92%</td><td>最高階</td></tr>
+                        <tr><td>業務協理</td><td>AVP</td><td style="color:var(--color-success);">90%</td><td></td></tr>
+                        <tr><td>業務總監</td><td>SBD</td><td style="color:#fff;">83%</td><td>區主管</td></tr>
+                        <tr><td>經理</td><td>UM</td><td>75%</td><td></td></tr>
+                        <tr><td>業務副理</td><td>BAS</td><td>70%</td><td></td></tr>
+                        <tr><td>業務專員</td><td>AG</td><td>60%</td><td>起點</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="rule-card">
+                <div class="rule-title"><i class="fas fa-sitemap"></i> 組織獎金制度 (Bonus Structure)</div>
+                <table class="rule-table">
+                    <thead>
+                        <tr>
+                            <th>項目</th>
+                            <th>推輔合一 (最佳)</th>
+                            <th>推輔分開 (分離)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>啟動條件</strong></td>
+                            <td style="color:var(--color-success);">上線職級 > 下線</td>
+                            <td style="color:var(--color-warning);">同階 / 低增高 / 跨區</td>
+                        </tr>
+                        <tr>
+                            <td><strong>級差獎金</strong></td>
+                            <td style="color:var(--color-success);">100% 級差</td>
+                            <td style="color:var(--color-warning);">30% 級差</td>
+                        </tr>
+                        <tr>
+                            <td><strong>代數獎金</strong></td>
+                            <td style="color:var(--color-success);">100% 領取 (4%)</td>
+                            <td style="color:var(--color-success);">100% 領取 (4%)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>總獲利</strong></td>
+                            <td style="font-weight:bold; color:var(--color-personal);">雙重疊加 (Max)</td>
+                            <td>折扣後收益</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="rule-card">
+                <div class="rule-title"><i class="fas fa-calculator"></i> 實戰案例：SBD (83%) 增員 AG (60%)</div>
+                <div style="color:var(--text-sub); margin-bottom:15px;">
+                    假設條件：您是 <strong>SBD</strong>，下屬是 <strong>AG</strong>。<br>
+                    兩人首年度 TFYB 皆為 <strong>61 萬</strong> (長年期)。比較兩種制度的組織獲利差異。
+                </div>
+                
+                <div class="comparison-grid">
+                    <div class="case-box winner">
+                        <div class="case-header">🔥 推輔合一 (雙重獲利)</div>
+                        <div class="case-row">
+                            <span>1. 級差獎金 (23%)</span>
+                            <span>$140,300</span>
+                        </div>
+                        <div class="case-row">
+                            <span>2. 代數獎金 (4%)</span>
+                            <span>$24,400</span>
+                        </div>
+                        <div class="case-row">
+                            <span>3. 個人佣金 (83%)</span>
+                            <span>$506,300</span>
+                        </div>
+                        <div class="case-total">
+                            <span>總收入 (Total)</span>
+                            <span>$671,000</span>
+                        </div>
+                    </div>
+
+                    <div class="case-box loser">
+                        <div class="case-header">📉 推輔分開 (損失)</div>
+                        <div class="case-row">
+                            <span>1. 推薦利益 (級差 x 30%)</span>
+                            <span style="color:var(--color-warning);">$42,090</span>
+                        </div>
+                        <div class="case-row">
+                            <span>2. 代數獎金 (4%)</span>
+                            <span>$24,400</span>
+                        </div>
+                        <div class="case-row">
+                            <span>3. 個人佣金 (83%)</span>
+                            <span>$506,300</span>
+                        </div>
+                        <div class="case-total">
+                            <span>總收入 (Total)</span>
+                            <span>$572,790</span>
+                        </div>
+                    </div>
+
+                    <div class="diff-badge">
+                        💰 制度選擇差異：您的年收入將相差 $98,210 (約 10 萬)！
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+    let myChart = null;
+
+    function calculate() {
+        // --- 1. 讀取輸入值 ---
+        const strategyInput = document.getElementById('strategySelect').value;
+        const mixRatio = parseFloat(document.getElementById('productMix').value); 
+        
+        const myRankVal = Number(document.getElementById('myRank').value);
+        const subRankVal = Number(document.getElementById('subRank').value);
+        
+        const selfSalesRaw = Number(document.getElementById('sliderSales').value);
+        const teamSalesRaw = Number(document.getElementById('sliderTeamSales').value);
+        const recruits = Number(document.getElementById('sliderRecruits').value);
+        const retentionRaw = Number(document.getElementById('sliderRetention').value);
+
+        // 單位轉換
+        const selfTFYB = selfSalesRaw * 10000;
+        const teamTFYB = teamSalesRaw * 10000;
+        const retentionRate = retentionRaw / 100;
+
+        // UI 數值更新
+        document.getElementById('valSales').innerText = `$${selfTFYB.toLocaleString()}`;
+        document.getElementById('valTeamSales').innerText = `$${teamTFYB.toLocaleString()}`;
+        document.getElementById('valRecruits').innerText = `${recruits} 人`;
+        document.getElementById('valRetention').innerText = `${retentionRaw}%`;
+        
+        // --- 2. 核心邏輯 (V29 雙重獲利修正) ---
+        let isSplitForced = false;
+        let effectiveStrategy = strategyInput;
+        
+        // 規則：若下屬職級 >= 自己，強制啟動「推輔分開」
+        if (subRankVal >= myRankVal) {
+            isSplitForced = true;
+            effectiveStrategy = 'B';
+            document.getElementById('splitAlert').style.display = 'block'; 
+        } else {
+            document.getElementById('splitAlert').style.display = 'none';
+        }
+
+        // 代數獎金參數 (手冊 P.9)
+        const shortRatio = 1 - mixRatio;
+        const gen1Rate = (mixRatio * 0.04) + (shortRatio * 0.02); 
+        const gen2Rate = (mixRatio * 0.01) + (shortRatio * 0.00); 
+
+        // 級差計算 (Spread)
+        let spreadRate = Math.max(0, myRankVal - subRankVal);
+
+        // --- 3. 模擬運算函數 ---
+        function runSimulation(strat, isForced) {
+            let accSelf = 0, accTeam = 0;
+            let result = [];
+
+            for (let year = 1; year <= 10; year++) {
+                // A. 個人收入
+                let selfFYC = selfTFYB * myRankVal;
+                let selfRenew = 0;
+                if (year > 1 && mixRatio > 0) {
+                    for (let p = 1; p < year; p++) {
+                        if (year - p <= 6) { 
+                            selfRenew += (selfTFYB * mixRatio * 0.10 * myRankVal * Math.pow(retentionRate, year - p));
+                        }
+                    }
+                }
+                let currentSelf = selfFYC + selfRenew;
+                accSelf += currentSelf;
+
+                // B. 團隊利潤 (V29 重大修正：級差 + 代數)
+                let teamVolume = teamTFYB * recruits;
+                let spreadBonus = 0;
+                let genBonus = 0;
+
+                // (1) 級差部分
+                let currentSpread = spreadRate;
+                if (isForced && spreadRate === 0) {
+                     currentSpread = 0;
+                }
+                spreadBonus = teamVolume * currentSpread;
+
+                // 判斷策略折扣
+                if (strat === 'B' || isForced) {
+                    // 推輔分開：級差打 3 折 (推薦利益)
+                    spreadBonus = spreadBonus * 0.30;
+                }
+
+                // (2) 代數部分 (無論合一或分開，只要符合資格皆領)
+                genBonus = teamVolume * gen1Rate;
+                
+                // (3) 團隊續期 (僅合一模式享有完整續期組織利益)
+                let teamRenew = 0;
+                if (strat === 'A' && !isForced && year > 1 && mixRatio > 0) {
+                    for (let p = 1; p < year; p++) {
+                        if (year - p <= 6) {
+                            teamRenew += (teamVolume * mixRatio * 0.02 * Math.pow(retentionRate, year - p));
+                        }
+                    }
+                }
+
+                let currentTeam = spreadBonus + genBonus + teamRenew;
+                accTeam += currentTeam;
+
+                result.push({
+                    year: year,
+                    self: currentSelf,
+                    team: currentTeam,
+                    total: currentSelf + currentTeam,
+                    accSelf: accSelf,
+                    accTeam: accTeam,
+                    accTotal: accSelf + accTeam
+                });
+            }
+            return result;
+        }
+
+        // 執行運算
+        const dataCurrent = runSimulation(effectiveStrategy, isSplitForced);
+        
+        let dataA, dataB;
+        if (isSplitForced) {
+            dataA = [{ accTeam: 0 },{},{},{},{},{},{},{},{},{ accTeam: 0 }]; // 平階無合一
+            dataB = runSimulation('B', true); 
+        } else {
+            dataA = runSimulation('A', false);
+            dataB = runSimulation('B', false);
+        }
+
+        // --- 4. 更新 UI ---
+        const fmt = (n) => '$' + Math.round(n).toLocaleString();
+        
+        // Year 1
+        document.getElementById('y1_total').innerText = fmt(dataCurrent[0].total);
+        document.getElementById('y1_self').innerText = fmt(dataCurrent[0].self);
+        document.getElementById('y1_team').innerText = fmt(dataCurrent[0].team);
+        updateBar('bar1', dataCurrent[0].self, dataCurrent[0].team);
+
+        // Year 5
+        document.getElementById('y5_total').innerText = fmt(dataCurrent[4].accTotal);
+        document.getElementById('y5_self').innerText = fmt(dataCurrent[4].accSelf);
+        document.getElementById('y5_team').innerText = fmt(dataCurrent[4].accTeam);
+        updateBar('bar5', dataCurrent[4].accSelf, dataCurrent[4].accTeam);
+
+        // Year 10
+        document.getElementById('y10_total').innerText = fmt(dataCurrent[9].accTotal);
+        document.getElementById('y10_self').innerText = fmt(dataCurrent[9].accSelf);
+        document.getElementById('y10_team').innerText = fmt(dataCurrent[9].accTeam);
+        updateBar('bar10', dataCurrent[9].accSelf, dataCurrent[9].accTeam);
+
+        // Leverage
+        const totalA = dataA[9].accTeam || 0;
+        const totalB = dataB[9].accTeam || 0;
+        document.getElementById('lev_val_A').innerText = fmt(totalA);
+        document.getElementById('lev_val_B').innerText = fmt(totalB);
+        let multiplier = 0;
+        if (totalB > 0) multiplier = (totalA / totalB).toFixed(1);
+        else if (totalA > 0) multiplier = "∞";
+        else multiplier = "0.0";
+        document.getElementById('lev_multiplier').innerText = multiplier + "x";
+
+        // AI 建議
+        updateAIAdvice(effectiveStrategy, mixRatio, recruits, isSplitForced, myRankVal, subRankVal);
+
+        // 更新圖表與表格
+        updateTableChart(dataCurrent);
+    }
+
+    function updateBar(idPrefix, pVal, tVal) {
+        const total = pVal + tVal;
+        let pPct = 0, tPct = 0;
+        if (total > 0) {
+            pPct = (pVal / total) * 100;
+            tPct = (tVal / total) * 100;
+        }
+        document.getElementById(idPrefix+'_p').style.width = pPct + '%';
+        document.getElementById(idPrefix+'_t').style.width = tPct + '%';
+    }
+
+    function updateAIAdvice(strategy, mix, recruits, isForced, myRank, subRank) {
+        let advice = "";
+        
+        if (isForced) {
+            advice = `⚠️ <span style="color:#f59e0b">制度警示：</span>目前處於「平階/低增高」狀態。<br>系統已依規啟動「推輔分離」：領取代數獎金 + 30% 級差利益。<br><strong>戰略建議：</strong>盡速升級以恢復「合一制」，解鎖 100% 雙重獲利！`;
+        } else if (strategy === 'B') {
+            advice = `ℹ️ <span style="color:#38bdf8">分開模式：</span>您選擇了推輔分開。<br>雖然可領代數，但級差利益僅剩 30%。<br><strong>戰略建議：</strong>「推輔合一」可同時領全額級差與代數，獲利差異巨大，建議轉型！`;
+        } else if (recruits < 3) {
+            advice = `🚀 <span style="color:#10b981">啟動建議：</span>易安網制度優勢在於「級差+代數」雙重疊加。<br><strong>戰略建議：</strong>目標 Q3 增員至 5 人，利用雙重槓桿讓收入指數級成長。`;
+        } else {
+            advice = `👑 <span style="color:#d946ef">卓越狀態：</span>您正處於「推輔合一」的最佳獲利點！<br><strong>戰略建議：</strong>同時享有 ${(myRank-subRank)*100}% 級差與 4% 代數，請持續擴大組織基數。`;
+        }
+        
+        document.getElementById('aiAdvice').innerHTML = advice;
+    }
+
+    function updateTableChart(data) {
+        let html = '';
+        data.forEach(d => {
+            html += `<tr>
+                <td>Y${d.year}</td>
+                <td style="color:var(--color-personal)">$${Math.round(d.self).toLocaleString()}</td>
+                <td style="color:var(--color-team)">$${Math.round(d.team).toLocaleString()}</td>
+                <td style="color:white; font-weight:bold">$${Math.round(d.total).toLocaleString()}</td>
+            </tr>`;
+        });
+        document.getElementById('tableBody').innerHTML = html;
+
+        const ctx = document.getElementById('mainChart').getContext('2d');
+        if(myChart) myChart.destroy();
+
+        let gradientTotal = ctx.createLinearGradient(0, 0, 0, 400);
+        gradientTotal.addColorStop(0, 'rgba(255, 255, 255, 0.3)');
+        gradientTotal.addColorStop(1, 'rgba(255, 255, 255, 0.0)');
+
+        myChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: data.map(d => 'Y'+d.year),
+                datasets: [
+                    {
+                        label: '總資產累積', data: data.map(d => d.accTotal),
+                        borderColor: '#ffffff', backgroundColor: gradientTotal,
+                        borderWidth: 3, fill: true, tension: 0.4, pointRadius: 4
+                    },
+                    {
+                        label: '團隊利潤累積', data: data.map(d => d.accTeam),
+                        borderColor: '#fb923c', borderWidth: 2, borderDash: [5,5],
+                        fill: false, tension: 0.4
+                    },
+                    {
+                        label: '個人收入累積', data: data.map(d => d.accSelf),
+                        borderColor: '#38bdf8', borderWidth: 2, borderDash: [2,2],
+                        fill: false, tension: 0.4
+                    }
+                ]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                plugins: { 
+                    legend: { labels: { color: '#94a3b8' } },
+                    tooltip: { 
+                        backgroundColor:'rgba(30, 41, 59, 0.9)', 
+                        titleColor: '#fff',
+                        bodyColor: '#cbd5e1',
+                        borderColor: '#475569', borderWidth: 1
+                    } 
+                },
+                scales: {
+                    x: { grid:{display:false}, ticks:{color:'#64748b'} },
+                    y: { 
+                        grid:{color:'#334155', borderDash:[5,5]}, 
+                        ticks:{ color:'#64748b', callback: function(value) { return '$' + value.toLocaleString(); } } 
+                    }
+                }
+            }
+        });
+    }
+
+    window.onload = function() {
+        setTimeout(calculate, 100);
+    };
+</script>
+
+</body>
+</html>
